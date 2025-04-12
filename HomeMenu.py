@@ -15,11 +15,11 @@ def home_menu(current_user):
         ).execute()
       
         if choice == " Stories ":
-            stories(current_user)
+            view_stories(current_user)
         elif choice == " Posts ":
-            posts(current_user)
+            view_posts(current_user)
         elif choice == " Messages ":
-            messages(current_user)
+            view_messages(current_user)
         elif choice == " Notifications ":
             notifications(current_user)
             break
