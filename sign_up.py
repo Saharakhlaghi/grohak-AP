@@ -1,5 +1,6 @@
 
 import yes_or_no
+import save_data
 def password_test(password):
     Flag_1 = False
     Flag_2 = False
@@ -23,7 +24,8 @@ def password_test(password):
         print("Use lowercase and uppercase letters, numbers, and @/?/!/&/_/#/$")
         return False
 
-users = {}  
+users =save_data.load_dataa() 
+
 def sign_up():
     print("\n----- Sign Up -----")
     try:
@@ -45,7 +47,7 @@ def sign_up():
         
         name = input("Name: ").strip()
         bio = input("Bio: ").strip()
-        is_private = yes_or_no("Make profile private? (y/n): ")
+        is_private = yes_or_no.yes_or_no("Make profile private? (y/n): ")
 
         user_data = {
             "email": email,
@@ -65,7 +67,9 @@ def sign_up():
         }
         users[username] = user_data
         print("Account created successfully. You are now logged in.")
+        save_data.save_dataa(users)
         return user_data
+    
     except Exception as e:
         print("Error during registration:", e)
         return None
