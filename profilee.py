@@ -1,3 +1,7 @@
+from InquirerPy import inquirer
+from InquirerPy.separator import Separator
+from datetime import datetime
+
 instagram_account = {
     "username": " ",
     "password": " ",
@@ -11,7 +15,6 @@ other_accounts = {
     "username1": " ",
     "username2": " "
 }
-
 def yes_or_no(prompt):
     while True:
         answer = input(prompt).strip().lower()
@@ -21,21 +24,6 @@ def yes_or_no(prompt):
             return False
         else:
             print("Please enter 'y/yes' or 'n/no'.")
-
-def show_main_menu():
-    print("\n=== INSTAGRAM MAIN MENU ===")
-    print(f"Logged in as: {instagram_account['username']}")
-    print("1. View My Profile")
-    print("2. Create New Post")
-    print("3. Create Story")
-    print("4. View Followers")
-    print("5. View Following")
-    print("6. Search Users")
-    print("7. View Notifications")
-    print("8. View Messages")
-    print("9. Account Settings")
-    print("10. Logout")
-    print("11. Delete Account")
 
 def view_my_profile():
     print(f"\n=== {instagram_account['username']}'s PROFILE ===")
@@ -57,8 +45,6 @@ def view_my_profile():
         edit_profile()
     elif choice == "2":
         view_all_posts()
-
-from datetime import datetime  
 
 def create_new_post():
     print("\n=== CREATE NEW POST ===")
@@ -159,14 +145,6 @@ def unfollow_user():
                     print(f"You have unfollowed {user}")
                 return
         print("Invalid input. Please try again.")
-    
-    choice = input("Choose an option: ")
-    if choice == "1":
-        user_num = input("Enter user number: ")
-        if user_num.isdigit():
-            num = int(user_num) - 1
-            if 0 <= num < len(results):
-                view_user_profile(results[num])
 
 def view_user_profile(username):
     print(f"\n=== {username}'s PROFILE ===")
@@ -224,42 +202,68 @@ def delete_account():
     
     print("\nYour account has been permanently deleted.")
     return True
-
+    
 def edit_profile(): pass
 def view_all_posts(): pass
 def send_message(user): pass
 def view_notifications(): pass
 def view_messages(): pass
 def account_settings(): pass
+def search_users(): pass
 
-while True:
-    show_main_menu()
-    choice = input("\nEnter your choice (1-11): ")
+def show_main_menu():
+    choice = inquirer.select(
+        message=f"=== INSTAGRAM MAIN MENU ===\nLogged in as: {instagram_account['username']}",
+        choices=[
+            {"name": "1. View My Profile", "value": 1},
+            {"name": "2. Create New Post", "value": 2},
+            {"name": "3. Create Story", "value": 3},
+            {"name": "4. View Followers", "value": 4},
+            {"name": "5. View Following", "value": 5},
+            {"name": "6. Search Users", "value": 6},
+            {"name": "7. View Notifications", "value": 7},
+            {"name": "8. View Messages", "value": 8},
+            {"name": "9. Account Settings", "value": 9},
+            Separator(),
+            {"name": "10. Logout", "value": 10},
+            {"name": "11. Delete Account", "value": 11},
+        ],
+        pointer=">",
+    ).execute()
     
-    if choice == "1":
-        view_my_profile()
-    elif choice == "2":
-        create_new_post()
-    elif choice == "3":
-        create_story()
-    elif choice == "4":
-        view_followers()
-    elif choice == "5":
-        view_following()
-    elif choice == "6":
-        search_users()
-    elif choice == "7":
-        view_notifications()
-    elif choice == "8":
-        view_messages()
-    elif choice == "9":
-        account_settings()
-    elif choice == "10":
-        if yes_or_no("Are you sure you want to logout? (y/n): "):
-            print("\nYou have been logged out.")
-            break
-    elif choice == "11":
-        if delete_account():
-            break
-    else:
-        print(" ")
+    return choice
+
+def main():
+    while True:
+        choice = show_main_menu()
+        
+        if choice == 1:
+            view_my_profile()
+        elif choice == 2:
+            create_new_post()
+        elif choice == 3:
+            create_story()
+        elif choice == 4:
+            view_followers()
+        elif choice == 5:
+            view_following()
+        elif choice == 6:
+            search_users()
+        elif choice == 7:
+            view_notifications()
+        elif choice == 8:
+            view_messages()
+        elif choice == 9:
+            account_settings()
+        elif choice == 10:
+            if yes_or_no("Are you sure you want to logout? (y/n): "):
+                print("\nYou have been logged out.")
+                break
+        elif choice == 11:
+            if delete_account():
+                break
+        
+        input("\nPress Enter to continue...")
+
+if __name__ == "__main__":
+    main()
