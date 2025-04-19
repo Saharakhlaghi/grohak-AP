@@ -3,131 +3,120 @@ import os
 from datetime import datetime
 from InquirerPy import inquirer
 
-# File: group_chats.py
-# Handles creation and interaction of group chats.
-
 GROUPS_FILE = "groups.json"
 
 def load_groups(filepath=GROUPS_FILE):
     if not os.path.exists(filepath):
         return {}
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         return json.load(f)
 
 def save_groups(groups, filepath=GROUPS_FILE):
-    with open(filepath, "w") as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         json.dump(groups, f, indent=4)
 
-# Initialize groups data
-groups = load_groups()
-
-def view_group_chats(current_user, users):
-    """Main menu for group chats."""
-    global groups
-    while True:
-        # List groups the user is a member of
-        user_groups = [name for name, g in groups.items() if current_user["username"] in g["members"]]
-        choices = [{"name": f"{name} ({len(groups[name]['members'])} members)", "value": name} for name in user_groups]
-        choices.append({"name": "Create New Group", "value": "__create"})
-        choices.append({"name": "Back", "value": "__back"})
-        
-        selection = inquirer.select(
-            message="=== Group Chats ===",
-            choices=choices
-        ).execute()
-        
-        if selection == "__create":
-            create_group(current_user, users)
-        elif selection == "__back":
-            break
-        else:
-            view_group_chat(current_user, users, selection)
-
-
-def create_group(current_user, users):
-    """Create a new group with selected members."""
-    global groups
-    group_name = input("Enter a name for the group: ").strip()
-    if not group_name:
-        print("Group name cannot be empty.")
+def create_group_chat(current_user, users, groups):
+    name = input("Group name: ").strip()
+    if not name or name in groups:
+        print("Invalid or existing group.")
         return
-    if group_name in groups:
-        print("A group with this name already exists.")
-        return
-    available_users = [u for u in users if u != current_user["username"]]
-    if not available_users:
-        print("No users available to add.")
-        return
-    selected = inquirer.checkbox(
-        message="Select users to add:",
-        choices=available_users
-    ).execute()
-    members = [current_user["username"]] + selected
-    groups[group_name] = {"members": members, "messages": []}
+    choices = [u for u in users if u != current_user["username"]]
+    members = inquirer.checkbox(message="Add members:", choices=choices).execute()
+    groups[name] = {
+        "members": [current_user["username"]] + members,
+        "messages": []
+    }
     save_groups(groups)
-    print(f"Group '{group_name}' created with members: {', '.join(members)}.")
+    print(f"Group '{name}' created.")
 
-
-def view_group_chat(current_user, users, group_name):
-    """View and interact within a specific group chat."""
-    global groups
-    group = groups.get(group_name)
-    if not group:
-        print("Group not found.")
+def join_group_chat(current_user, groups):
+    available = [g for g,d in groups.items() if current_user["username"] not in d["members"]]
+    if not available:
+        print("No groups to join.")
         return
+    name = inquirer.select(message="Join which group?", choices=available).execute()
+    groups[name]["members"].append(current_user["username"])
+    save_groups(groups)
+    print(f"You joined '{name}'.")
+
+def leave_group_chat(current_user, groups):
+    member_of = [g for g,d in groups.items() if current_user["username"] in d["members"]]
+    if not member_of:
+        print("You are in no groups.")
+        return
+    name = inquirer.select(message="Leave which group?", choices=member_of).execute()
+    groups[name]["members"].remove(current_user["username"])
+    if not groups[name]["members"]:
+        del groups[name]
+        print(f"Group '{name}' deleted (no members).")
+    else:
+        print(f"You left '{name}'.")
+    save_groups(groups)
+
+def view_group_messages(current_user, groups, name):
+    msgs = groups[name]["messages"]
+    if not msgs:
+        print("No messages.")
+    else:
+        for sender, text, ts in msgs:
+            print(f"[{ts}] {sender}: {text}")
+    input("Press Enter to continue...")
+
+def send_group_message(current_user, groups, name):
+    text = input("Message: ").strip()
+    if not text:
+        return
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    groups[name]["messages"].append((current_user["username"], text, ts))
+    save_groups(groups)
+    print("Message sent.")
+
+def group_chat_session(current_user, users, groups, name):
     while True:
-        print(f"\n=== Group: {group_name} ===")
-        print("Members:", ", ".join(group["members"]))
-        print("\nMessages:")
-        for sender, message, timestamp in group["messages"]:
-            print(f"[{timestamp}] {sender}: {message}")
         choice = inquirer.select(
-            message="Options:",
-            choices=["Write Message", "Add Member", "Remove Member", "Back"]
+            message=f"=== {name} ===",
+            choices=["View Messages", "Send Message", "Add Member", "Remove Member", "Leave Group", "Back"]
         ).execute()
-        
-        if choice == "Write Message":
-            msg = inquirer.text(message="Your message:").execute().strip()
-            if msg:
-                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                group["messages"].append((current_user["username"], msg, ts))
-                save_groups(groups)
-                # Notify other members
-                for member in group["members"]:
-                    if member != current_user["username"]:
-                        users[member]["notifications"].append(
-                            f"New message in group '{group_name}' from {current_user['username']}."
-                        )
-                print("Message sent.")
+        if choice == "View Messages":
+            view_group_messages(current_user, groups, name)
+        elif choice == "Send Message":
+            send_group_message(current_user, groups, name)
         elif choice == "Add Member":
-            available = [u for u in users if u not in group["members"]]
-            if not available:
-                print("No users to add.")
-            else:
-                selected = inquirer.checkbox(
-                    message="Select users to add:",
-                    choices=available
-                ).execute()
-                for u in selected:
-                    group["members"].append(u)
-                    users[u]["notifications"].append(
-                        f"You were added to group '{group_name}'."
-                    )
+            avail = [u for u in users if u not in groups[name]["members"]]
+            if avail:
+                picked = inquirer.checkbox(message="Add:", choices=avail).execute()
+                groups[name]["members"].extend(picked)
                 save_groups(groups)
         elif choice == "Remove Member":
-            removable = [u for u in group["members"] if u != current_user["username"]]
-            if not removable:
-                print("No members to remove.")
-            else:
-                selected = inquirer.checkbox(
-                    message="Select members to remove:",
-                    choices=removable
-                ).execute()
-                for u in selected:
-                    group["members"].remove(u)
-                    users[u]["notifications"].append(
-                        f"You were removed from group '{group_name}'."
-                    )
+            rems = [u for u in groups[name]["members"] if u != current_user["username"]]
+            if rems:
+                picked = inquirer.checkbox(message="Remove:", choices=rems).execute()
+                for u in picked:
+                    groups[name]["members"].remove(u)
                 save_groups(groups)
-        elif choice == "Back":
+        elif choice == "Leave Group":
+            leave_group_chat(current_user, groups)
+            break
+        else:
+            break
+
+def group_chat_menu(current_user, users):
+    groups = load_groups()
+    while True:
+        choice = inquirer.select(
+            message="=== Group Chats ===",
+            choices=["Create Group", "Join Group", "Open Group", "Leave Group", "Back"]
+        ).execute()
+        if choice == "Create Group":
+            create_group_chat(current_user, users, groups)
+        elif choice == "Join Group":
+            join_group_chat(current_user, groups)
+        elif choice == "Open Group":
+            owned = [g for g,d in groups.items() if current_user["username"] in d["members"]]
+            if owned:
+                name = inquirer.select(message="Select group:", choices=owned).execute()
+                group_chat_session(current_user, users, groups, name)
+        elif choice == "Leave Group":
+            leave_group_chat(current_user, groups)
+        else:
             break
