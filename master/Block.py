@@ -1,9 +1,6 @@
 from InquirerPy import inquirer
 import save_data
 
-# File: block_unblock.py
-# Functions to block and unblock users, similar to Instagram
-
 def block_user(current_user, users):
     """Block a user: add to blocked list, remove from followers/following, notify."""
     available = [u for u in users if u != current_user["username"] and u not in current_user.get("blocked", [])]
@@ -14,18 +11,18 @@ def block_user(current_user, users):
         message="Select a user to block:",
         choices=available
     ).execute()
-    # Initialize blocked list if missing
+    
     current_user.setdefault("blocked", [])
     current_user["blocked"].append(to_block)
     save_data.save_dataa(users)
-    # Remove relations
+
     if to_block in current_user.get("followers", []):
         current_user["followers"].remove(to_block)
         save_data.save_dataa(users)
     if to_block in current_user.get("following", []):
         current_user["following"].remove(to_block)
         save_data.save_dataa(users)
-    # Notify the blocked user
+    
     users[to_block].setdefault("notifications", []).append(
         f"You were blocked by {current_user['username']}.")
     save_data.save_dataa(users)
@@ -33,7 +30,6 @@ def block_user(current_user, users):
 
 
 def unblock_user(current_user, users):
-    """Unblock a user: remove from blocked list and notify."""
     blocked = current_user.get("blocked", [])
     if not blocked:
         print("You have no blocked users.")
