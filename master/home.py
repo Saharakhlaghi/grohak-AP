@@ -84,7 +84,6 @@ def view_stories(current_user):
     if not found:
         print("No stories available.")
         input("\nPress Enter to go back...")
-
         
 all_posts=[]  
 def view_posts(current_user):
@@ -94,7 +93,6 @@ def view_posts(current_user):
         if uname in current_user["following"]:
             if uname != current_user["username"] and uname not in current_user["blocked"]:
                 for post in user["posts"]:
-                    # Convert string post to dict if needed
                     if isinstance(post, str):
                         post = {
                             "content": post,
@@ -473,8 +471,6 @@ def add_group_member(current_user, users, groups, name):
     save_groups(groups)
     print(f"Added {', '.join(new_members)} to '{name}'.")
 
-
-
 def remove_group_member(current_user, groups, name):
     group = groups[name]
     if current_user["username"] not in group["members"]:
@@ -511,7 +507,6 @@ def remove_group_member(current_user, groups, name):
 
     save_groups(groups)
     print(f"Removed {', '.join(members_to_remove)} from '{name}'.")
-
 
 
 def group_chat_menu(current_user, users):
@@ -605,8 +600,6 @@ def tagged_posts(current_user):
             print(f"Likes: {post['likes']} | Comments: {len(post['comments'])} | Shares: {post['shares']} | Saves: {post['saves']}")
     
     input("Press Enter to continue...")
-
-
         
 def count_tagged_posts(current_user):
     count = 0
@@ -624,8 +617,22 @@ def count_tagged_posts(current_user):
             else:
                 if isinstance(post["comments"], str) and f"@{current_user['username']}" in post["comments"]:
                     count += 1
-
     return count
+
+def other_notifs(current_user):
+    print("---Other Notificatons---")
+    
+    if not current_user["notifications"]:
+        print("No notifications.")
+    else: 
+        for note in current_user["notifications"]:
+            print("-", note)
+            current_user["notification_history"].append(f"[Other] {note}")
+        current_user["notifications"]=[]
+        users=save_data.load_dataa()
+        users[current_user["username"]]=current_user
+        save_data.save_dataa(users)
+        input("Press Enter to continue...")
 
     
 def follow_requests(current_user):
@@ -679,18 +686,3 @@ def follow_requests(current_user):
     input("Press Enter to continue...")
     
     
-def other_notifs(current_user):
-    print("---Other Notificatons---")
-    
-    if not current_user["notifications"]:
-        print("No notifications.")
-    else: 
-        for note in current_user["notifications"]:
-            print("-", note)
-            current_user["notification_history"].append(f"[Other] {note}")
-        current_user["notifications"]=[]
-        users=save_data.load_dataa()
-        users[current_user["username"]]=current_user
-        save_data.save_dataa(users)
-        input("Press Enter to continue...")
-            
