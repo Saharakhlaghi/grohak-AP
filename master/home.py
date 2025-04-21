@@ -85,10 +85,10 @@ def view_stories(current_user):
         print("No stories available.")
         input("\nPress Enter to go back...")
         
-all_posts=[]  
 def view_posts(current_user):
     print("---Posts---")
-
+    users = load_dataa()  
+    all_posts = []
     for uname, user in users.items():
         if uname in current_user["following"]:
             if uname != current_user["username"] and uname not in current_user["blocked"]:
@@ -187,7 +187,7 @@ def view_posts(current_user):
         
         elif action == "Share":
             recipient = input("Enter the username you want to share this post with: ").strip()
-            if recipient in users and recipient != current_user["username"]:
+            if recipient in users and recipient != current_user["username"] and current_user["username"] not in users[recipient].get("blocked", []):
                 users[recipient].setdefault("shared_posts", []).append({
                     "from": current_user["username"],
                     "owner": post_owner,
@@ -203,6 +203,7 @@ def view_posts(current_user):
         
         elif action == "Back":
             continue
+        
 def view_shared_posts(current_user):
     print("---Shared Posts---")
 
