@@ -2,7 +2,6 @@ from InquirerPy import inquirer
 import save_data
 
 def block_user(current_user, users):
-    """Block a user: add to blocked list, remove from followers/following, notify."""
     available = [u for u in users if u != current_user["username"] and u not in current_user.get("blocked", [])]
     if not available:
         print("No users available to block.")
@@ -46,7 +45,6 @@ def unblock_user(current_user, users):
 
 
 def block_menu(current_user, users):
-    """Menu for blocking/unblocking users."""
     while True:
         choice = inquirer.select(
             message="=== Block / Unblock ===",
