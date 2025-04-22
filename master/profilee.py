@@ -144,18 +144,21 @@ def profile_menu(current_user):
 
             
         elif choice == "Blocked Users":
+            users = load_dataa
             blocked_users(current_user)
             users[current_user["username"]] = current_user
             save_dataa(users)
 
 
         elif choice == "Update Profile (Name, Bio, Password)":
+            users = load_dataa()
             update_profile(current_user)
             users[current_user["username"]] = current_user
             save_dataa(users)
 
 
         elif choice == "Settings":
+            users = load_dataa()
             profile_settings(current_user)
             users[current_user["username"]] = current_user
             save_dataa(users)
@@ -249,18 +252,18 @@ def blocked_users(current_user):
     print(", ".join(blocked))
 
     unblock_prompt = inquirer.confirm(message="Do you want to unblock someone?", default=False).execute()
-            
-    if unblock_prompt:
-        to_unblock = inquirer.select(
-            message="Select a user to unblock:",
-            choices=blocked
-        ).execute()
-                
-        current_user["blocked"].remove(to_unblock)
-        users[to_unblock].setdefault("notifications", []).append(f"You were unblocked by {current_user['username']}.")
-        users[current_user["username"]] = current_user
-        save_dataa(users)
-        print(f"User '{to_unblock}' has been unblocked.")
-                
-
-        input("Press Enter to go back...")
+      
+    if len(current_user["blocked"]) != 0:      
+        if unblock_prompt:
+            to_unblock = inquirer.select(
+                message="Select a user to unblock:",
+                choices=blocked
+            ).execute()
+                    
+            current_user["blocked"].remove(to_unblock)
+            users[to_unblock].setdefault("notifications", []).append(f"You were unblocked by {current_user['username']}.")
+            users[current_user["username"]] = current_user
+            save_dataa(users)
+            print(f"User '{to_unblock}' has been unblocked.")
+                    
+            input("Press Enter to go back...")
